@@ -20,8 +20,6 @@ namespace TelegramConsole
             _client = new TelegramBotClient(token);
             _cancellationTokenSource = new CancellationTokenSource();
 
-            //_client = new TelegramBotClient("2141015782:AAFUH7apC-kuG2E1EmJR9rGAX09OmMzLyGo");
-            //var me = await _client.GetMeAsync();
             _client.OnMessage += BotClient_OnMessage;
         }
 
