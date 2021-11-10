@@ -1,7 +1,9 @@
-﻿using Serilog;
+﻿using Newtonsoft.Json.Linq;
+using Serilog;
 using System;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Telegram.Bot;
@@ -40,6 +42,13 @@ namespace TelegramConsole
                 {
                     Respond(chatId, "pong").GetAwaiter().GetResult();
                 }
+
+                if (text.ToLowerInvariant() == "chuck")
+                {
+                    var chuck = GetChuckJoke().GetAwaiter().GetResult();
+                    Respond(chatId, chuck).GetAwaiter().GetResult();
+                }
+
                 _logger.Information("{user}> {message}", message.From?.Username, text);
             }
 
@@ -47,6 +56,30 @@ namespace TelegramConsole
             {
                 var photo = message.Photo.OrderByDescending(x => x.FileSize).First();
                 DownloadPhotoAsync(photo).GetAwaiter().GetResult();
+            }
+        }
+
+        private async Task<string> GetChuckJoke()
+        {
+            try
+            {
+                var httpClient = new HttpClient()
+                {
+                    BaseAddress = new Uri("https://api.chucknorris.io")
+                };
+
+                var response = await httpClient.GetAsync("jokes/random");
+                var contents = await response.Content.ReadAsStringAsync();
+
+                var jObject = JObject.Parse(contents);
+                var joke = jObject.Value<string>("value");
+
+                return joke;
+            }
+            catch(Exception ex)
+            {
+                _logger.Error(ex, "");
+                throw;
             }
         }
 
