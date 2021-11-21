@@ -7,7 +7,8 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Telegram.Bot;
-using Telegram.Bot.Args;
+using Telegram.Bot.Extensions.Polling;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
 namespace TelegramConsole
@@ -22,18 +23,25 @@ namespace TelegramConsole
         public ClientHandler(AppSettings config)
         {
             _config = config;
-            _client = new TelegramBotClient(_config.Token);
             _cancellationTokenSource = new CancellationTokenSource();
             _logger = Log.ForContext<ClientHandler>();
-            _client.OnMessage += BotClient_OnMessage;
+            _client = new TelegramBotClient(_config.Token);
+            _client.StartReceiving(
+                HandleUpdateAsync,
+                HandleErrorAsync,
+                new ReceiverOptions { AllowedUpdates = { } },
+                cancellationToken: _cancellationTokenSource.Token);
+
+            var me = _client.GetMeAsync().GetAwaiter().GetResult();
+            _logger.Information($"Notifications configured for @{me.Username}");
 
             Directory.CreateDirectory(_config.OutputPath);
         }
 
-        private void BotClient_OnMessage(object sender, MessageEventArgs e)
+        private async Task HandleUpdateAsync(ITelegramBotClient client, Update update, CancellationToken arg3)
         {
-            var chatId = e.Message.Chat.Id;
-            var message = e.Message;
+            var chatId = update.Message.Chat.Id;
+            var message = update.Message;
             if (message.Type == MessageType.Text)
             {
                 var text = message.Text.Trim();
@@ -57,6 +65,11 @@ namespace TelegramConsole
                 var photo = message.Photo.OrderByDescending(x => x.FileSize).First();
                 DownloadPhotoAsync(photo).GetAwaiter().GetResult();
             }
+        }
+
+        private async Task HandleErrorAsync(ITelegramBotClient arg1, Exception ex, CancellationToken arg3)
+        {
+            _logger.Error(ex, "Notification Bot produced an error:");
         }
 
         private async Task<string> GetChuckJoke()
@@ -103,15 +116,10 @@ namespace TelegramConsole
             await _client.SendTextMessageAsync(chatId, message);
         }
 
-        public void Start()
-        {
-            _client.StartReceiving(cancellationToken: _cancellationTokenSource.Token);
-        }
 
         public void Stop()
         {
             _cancellationTokenSource.Cancel();
-            _client.StopReceiving();
         }
 
     }

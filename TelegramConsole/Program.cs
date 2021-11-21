@@ -7,7 +7,6 @@ namespace TelegramConsole
 {
     class Program
     {
-        
         static async Task Main(string[] args)
         {
             var Configuration = new ConfigurationBuilder()
@@ -22,7 +21,6 @@ namespace TelegramConsole
             var appSettings = Configuration.GetSection("AppSettings").Get<AppSettings>();
 
             var handler = new ClientHandler(appSettings);
-            handler.Start();
 
             Console.ReadLine();
 
