@@ -10,6 +10,7 @@ using Telegram.Bot;
 using Telegram.Bot.Extensions.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace TelegramConsole
 {
@@ -40,7 +41,9 @@ namespace TelegramConsole
 
         private async Task HandleUpdateAsync(ITelegramBotClient client, Update update, CancellationToken arg3)
         {
-            var chatId = update.Message.Chat.Id;
+            var chatId = update.Message != null
+                ? update.Message.Chat.Id
+                : update.MyChatMember.Chat.Id;
             var message = update.Message;
             if (message.Type == MessageType.Text)
             {
@@ -57,6 +60,17 @@ namespace TelegramConsole
                     Respond(chatId, chuck).GetAwaiter().GetResult();
                 }
 
+                if (text.ToLowerInvariant() == "menu")
+                {
+
+                    var response = await _client.SendTextMessageAsync(
+                        chatId: chatId,
+                        text: "pick",
+                        replyMarkup: await GetMarkup()
+                        );
+
+                }
+
                 _logger.Information("{user}> {message}", message.From?.Username, text);
             }
 
@@ -65,6 +79,19 @@ namespace TelegramConsole
                 var photo = message.Photo.OrderByDescending(x => x.FileSize).First();
                 DownloadPhotoAsync(photo).GetAwaiter().GetResult();
             }
+        }
+
+        private async Task<ReplyKeyboardMarkup> GetMarkup()
+        {
+            return new(new[]
+                {
+                    new KeyboardButton[] { "Help me", "Call me ☎️" },
+                    new KeyboardButton[] { "Hello", "World" },
+                    new KeyboardButton[] { "chuck" }
+                })
+            {
+                ResizeKeyboard = true
+            };
         }
 
         private async Task HandleErrorAsync(ITelegramBotClient arg1, Exception ex, CancellationToken arg3)
@@ -89,7 +116,7 @@ namespace TelegramConsole
 
                 return joke;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.Error(ex, "");
                 throw;
@@ -105,9 +132,9 @@ namespace TelegramConsole
                     await _client.GetInfoAndDownloadFileAsync(photo.FileId, fileStream, _cancellationTokenSource.Token);
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                _logger.Error(ex, "Error downloading photo"); 
+                _logger.Error(ex, "Error downloading photo");
             }
         }
 
