@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using Rwowbagger.Telegram;
 using Serilog;
 using System;
 using System.IO;
@@ -16,17 +17,17 @@ namespace TelegramConsole
 {
     public class ClientHandler
     {
-        private readonly AppSettings _config;
+        private readonly TelegramSettings _settings;
         private TelegramBotClient _client;
         private readonly CancellationTokenSource _cancellationTokenSource;
         private readonly ILogger _logger;
 
-        public ClientHandler(AppSettings config)
+        public ClientHandler(TelegramSettings settings)
         {
-            _config = config;
+            _settings = settings;
             _cancellationTokenSource = new CancellationTokenSource();
             _logger = Log.ForContext<ClientHandler>();
-            _client = new TelegramBotClient(_config.Token);
+            _client = new TelegramBotClient(_settings.Token);
             _client.StartReceiving(
                 HandleUpdateAsync,
                 HandleErrorAsync,
@@ -36,7 +37,7 @@ namespace TelegramConsole
             var me = _client.GetMeAsync().GetAwaiter().GetResult();
             _logger.Information($"Notifications configured for @{me.Username}");
 
-            Directory.CreateDirectory(_config.OutputPath);
+            Directory.CreateDirectory(_settings.OutputPath);
         }
 
         private async Task HandleUpdateAsync(ITelegramBotClient client, Update update, CancellationToken arg3)
@@ -127,7 +128,7 @@ namespace TelegramConsole
         {
             try
             {
-                using (var fileStream = new FileStream(Path.Combine(_config.OutputPath, $"{photo.FileUniqueId}.jpg"), FileMode.CreateNew, FileAccess.Write))
+                using (var fileStream = new FileStream(Path.Combine(_settings.OutputPath, $"{photo.FileUniqueId}.jpg"), FileMode.CreateNew, FileAccess.Write))
                 {
                     await _client.GetInfoAndDownloadFileAsync(photo.FileId, fileStream, _cancellationTokenSource.Token);
                 }
