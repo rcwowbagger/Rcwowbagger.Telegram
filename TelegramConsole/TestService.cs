@@ -29,9 +29,7 @@ namespace TelegramConsole
             _telegramBotService.AddCallback("/chuck", (id, tag) => GetChuckJoke().GetAwaiter().GetResult());
             _telegramBotService.AddCallback("/ping", (id, tag) => "pong");
             _telegramBotService.AddCallback("/MD", (id, tag) => GetMarkDown(), parseMode: (Int16)ParseMode.MarkdownV2);
-            //_telegramBotService.AddCallback("test", (id, arg) => BeginTest(id, arg, _tokenSource.Token).GetAwaiter().GetResult());
-            //_telegramBotService.AddCallback("stop test", (id, arg) => _tokenSource.Cancel());
-            _telegramBotService.AddCallbackWithExpectedResponse("/buffer", "Set buffer %", SetValue, new List<string> { "1", "2", "3", "4" });
+            _telegramBotService.AddCallbackWithExpectedResponse("/buffer", "Set buffer %", SetValue, ["1", "2", "3", "4"]);
         }
 
         private string GetMarkDown()

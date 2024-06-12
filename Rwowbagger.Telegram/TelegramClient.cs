@@ -14,8 +14,6 @@ namespace Rwowbagger.Telegram
         private TelegramBotClient _client;
         private readonly CancellationTokenSource _cancellationTokenSource;
 
-        public event Action<MessageEventArgs> OnMessage;
-
         private TelegramBotClient _clientPolling;
         private TelegramBotClient _clientSending;
         private readonly ILogger _logger;
@@ -32,7 +30,7 @@ namespace Rwowbagger.Telegram
         {
             _settings = setting;
             _logger = Log.ForContext<TelegramClient>();
-            MenuItemsFunc = (new Dictionary<string, (Func<string, string, string>, ParseMode parseMode)>());
+            MenuItemsFunc = new Dictionary<string, (Func<string, string, string>, ParseMode parseMode)>();
             MenuItemsAction = new Dictionary<string, Action<string, string>>();
             InlineItemsFunc = new Dictionary<string, (string, Func<string, string>, List<string>)>();
             _clientPolling = new TelegramBotClient(_settings.Token);
@@ -86,7 +84,6 @@ namespace Rwowbagger.Telegram
             });
         }
 
-
         private async Task HandleErrorAsync(ITelegramBotClient arg1, Exception ex, CancellationToken arg3)
         {
             _logger.Warning(ex, "Bot error");
@@ -137,8 +134,6 @@ namespace Rwowbagger.Telegram
                             var callback = InlineItemsFunc[command];
                             var callbackResponse = callback.callback(data);
 
-
-
                             await _clientSending.SendTextMessageAsync(
                                 chatId: chat.Id,
                                 text: callbackResponse,
@@ -160,7 +155,6 @@ namespace Rwowbagger.Telegram
                         }
                     }
                 }
-
             }
             else
             {
