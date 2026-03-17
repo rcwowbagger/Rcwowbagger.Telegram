@@ -98,7 +98,7 @@ namespace Rwowbagger.Telegram
                 && _settings.PermitCommandsFrom.Contains(update.Message?.From?.Username)
             )
             {
-                _logger.Information("{text} from {user}", update.Message.Text, update.Message.From);
+                _logger.Information("{text} from {user} ({id})", update.Message.Text, update.Message.From, update.Message.Chat.Id);
                 var message = update.Message.Text;
                 chat = update.Message.Chat;
 
